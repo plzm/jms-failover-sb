@@ -15,7 +15,7 @@ If anything here helps you, attribution and/or a quick note is much appreciated.
 
 ### Scenario
 
-Java Messaging Service (JMS) client apps using the Apache Qpid^TM^ AMQP client library were connecting to an on-premise Apache ActiveMQ messaging infrastructure and sending AMQP 1.0 messages. The clients were configured for failover over multiple ActiveMQ endpoints.
+Java Messaging Service (JMS) client apps using the Apache Qpid ^TM^ AMQP client library were connecting to an on-premise Apache ActiveMQ messaging infrastructure and sending AMQP 1.0 messages. The clients were configured for failover over multiple ActiveMQ endpoints.
 
 The client apps needed to target [Azure Service Bus](https://docs.microsoft.com/azure/service-bus-messaging/), which [supports JMS and AMQP](https://docs.microsoft.com/azure/service-bus-messaging/service-bus-java-how-to-use-jms-api-amqp). Failover across Azure regions was required for continuity. Source code changes and added dependencies, on Azure Service Bus or other libraries, needed to be minimized or avoided.
 
@@ -110,7 +110,7 @@ failover:(amqps://myfirstnamespace.servicebus.windows.net:5671,amqps://mysecondn
 
 Follow these steps to try this out.
 
-1. You will need a Java environment. I use Visual Studio Code with the Java Extension Pack, the Java^TM^ SE 11 JDK, working in WSL2 with Maven. Adjust as you prefer.
+1. You will need a Java environment. I use Visual Studio Code with the Java Extension Pack, the Java ^TM^ SE 11 JDK, working in WSL2 with Maven. Adjust as you prefer.
 2. Deploy two (or more) Azure Service Bus Premium namespaces in different Azure regions.
 3. Create a Shared Access Policy with at least *Send* claim in each namespace. In this sample, I use a SAP name of *SendListen* with those claims.
 4. Clone this repo.
