@@ -72,7 +72,7 @@ public class App
             }
 
             if (cl.getOptionValue("q") != null) {
-                queueName = cl.getOptionValue("c");
+                queueName = cl.getOptionValue("q");
             }
 
             if (cl.getOptionValue("n") != null) {

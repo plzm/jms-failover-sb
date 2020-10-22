@@ -49,7 +49,7 @@ failover:(amqps://myfirstnamespace.servicebus.windows.net:5671,amqps://mysecondn
 
 The JMS client needs to authenticate to Azure Service Bus. Again, in this example you are using Shared Access Signature authentication (SAS).
 
-To authenticate to Azure Service Bus, use the jms.username and jms.password configuration options. Per the [Apache Qpid documentation](https://qpid.apache.org/releases/qpid-jms-0.54.0/docs/index.html#failover-configuration-options), only `transport.` or `amqp.` options can be spevified per endpoint within the failover URI list, whereas `jms`	 options must be applied to the overall failover URI, outside the parentheses, and affect the entire JMS connection object.
+To authenticate to Azure Service Bus, use the jms.username and jms.password configuration options. Per the [Apache Qpid documentation](https://qpid.apache.org/releases/qpid-jms-0.54.0/docs/index.html#failover-configuration-options), only `transport.` or `amqp.` options can be specified individually on each endpoint within the failover URI list, whereas `jms.` options must be applied to the overall failover URI, outside the parentheses, and affect the entire JMS connection object.
 
 This means that authentication information (SAS rule name and key) *cannot be provided separately for each individual Azure Service Bus namespace URI*!
 
@@ -63,9 +63,9 @@ failover:(amqps://myfirstnamespace.servicebus.windows.net:5671,amqps://mysecondn
 
 Above, I said each Azure Service Bus namespace should be configured with the same-named Shared Access Policy with needed claims - in the failover URI above, I'm using *SendListen*.
 
-When Azure Service Bus creates a Shared Access Policy, it automatically generates unique keys. This means that another step is needed to synchronize the keys for the Shared Access Policy across Azure Service Bus namespaces.
+When Azure Service Bus creates a Shared Access Policy, it automatically generates unique keys. This means that the password will be different between namespaces, which will not work since we are only able to specify a single `jms.password` option in the failover URI! Another step is needed to synchronize the keys for the Shared Access Policy across Azure Service Bus namespaces.
 
-To do this, a shell script and some Azure Service Bus CLI commands can be used. The complete version of the following code is also in [sb-namespace-sync-keys.sh](./sb-namespace-sync-keys.sh) in this repo.
+To do this, I'll use a shell script and some Azure Service Bus CLI commands. The complete version of the following code is also in [sb-namespace-sync-keys.sh](./sb-namespace-sync-keys.sh) in this repo.
 
 This code:
 
@@ -123,11 +123,11 @@ Follow these steps to try this out.
    c. `java -jar ./target/jmsclient-1.0.0-jar-with-dependencies.jar -c $cs` - this passes the failover URI you stored in a $cs variable in step b. into the sample application.
    d. Optionally, you can add `-q` command-line args with your own queue name, and `-n` with a number of messages to send (will be constrained to be between 1 and 1,000). For a queue name of "q2" and 5 messages, this would change the command line from the previous step to `java -jar ./target/jmsclient-1.0.0-jar-with-dependencies.jar -c $cs -q "q2" -n 5`.
 
-If everything was configured correctly, you should see ten (10) messages sent to the first Azure Service Bus namespace in the failover URI list.
+If everything was configured correctly, you should see console log traces showing messages sent to the first Azure Service Bus namespace in the failover URI list.
 
-You can test failover by deleting the first Service Bus namespace (simulating a regional failure or other loss of connectivity), then re-running step 8c (or 8d). You should see a connection failure message, and then ten (10) messages should be sent to the *second* Azure Service Bus namespace in the list.
+You can test failover by deleting the first Service Bus namespace (simulating a regional failure or other loss of connectivity), then re-running step 8c (or 8d). You should see a connection failure message, and then messages should be sent to the *second* Azure Service Bus namespace in the list.
 
-**NOTE** Please do NOT use, or delete, production or critical Azure Service Bus or other resources to try this sample!
+**NOTE** Please do NOT delete production or can't-lose Azure Service Bus or other resources to try this sample! You *are* working in a test environment or learning sandbox, right? :)
 
 ### The code
 
