@@ -113,17 +113,19 @@ Follow these steps to try this out.
 1. You will need a Java environment. I use Visual Studio Code with the Java Extension Pack, the Java <sup>TM</sup> SE 11 JDK, working in WSL2 with Maven. Adjust as you prefer.
 2. Deploy two (or more) Azure Service Bus Premium namespaces in different Azure regions.
 3. Create a Shared Access Policy with at least *Send* claim in each namespace. In this sample, I use a SAP name of *SendListen* with those claims.
-4. Clone this repo.
-5. Edit [sb-namespace-sync-keys.sh](./sb-namespace-sync-keys.sh). Provide values for the variables storing your Azure subscription ID, the Resource Group names holding your source and destination Azure Service Bus namespaces (the namespaces can be in the same Resource Group - in that case just provide the same Resource Group name for both variable), the source and destination Azure Service Bus namespace names, and the name of the Shared Access Policy you created in each namespace.
-6. Open your favorite shell. Change to the root folder of this repo where you cloned it. Run ./sb-namespace-sync-keys.sh. It should take a few seconds to complete.
-7. In the shell, switch into the ./app folder. Run the following commands:
+4. Create a queue with the same name in each namespace. In this sample, a default queue name of **q1** is used, but you can override that with the `-q` command-line arg for the sample app.
+5. Clone this repo.
+6. Edit [sb-namespace-sync-keys.sh](./sb-namespace-sync-keys.sh). Provide values for the variables storing your Azure subscription ID, the Resource Group names holding your source and destination Azure Service Bus namespaces (the namespaces can be in the same Resource Group - in that case just provide the same Resource Group name for both variable), the source and destination Azure Service Bus namespace names, and the name of the Shared Access Policy you created in each namespace.
+7. Open your favorite shell. Change to the root folder of this repo where you cloned it. Run ./sb-namespace-sync-keys.sh. It should take a few seconds to complete.
+8. In the shell, switch into the ./app folder. Run the following commands:
    a. `mvn clean package` - this will build and package the app
    b. `cs="failover:(amqps://myfirstnamespace.servicebus.windows.net:5671,amqps://mysecondnamespace.servicebus.windows.net:5671)?jms.username=SendListen&jms.password=mysharedaccesskey&jms.clientID=jms_amqp_sb_client&failover.maxReconnectAttempts=1&amqp.idleTimeout=120000&amqp.traceFrames=true"` - this stores your complete failover URI in a bash variable (**NOTE** be careful NOT to include spaces on either side of the variable assignment = operator)
    c. `java -jar ./target/jmsclient-1.0.0-jar-with-dependencies.jar -c $cs` - this passes the failover URI you stored in a $cs variable in step b. into the sample application.
+   d. Optionally, you can add `-q` command-line args with your own queue name, and `-n` with a number of messages to send (will be constrained to be between 1 and 1,000). For a queue name of "q2" and 5 messages, this would change the command line from the previous step to `java -jar ./target/jmsclient-1.0.0-jar-with-dependencies.jar -c $cs -q "q2" -n 5`.
 
 If everything was configured correctly, you should see ten (10) messages sent to the first Azure Service Bus namespace in the failover URI list.
 
-You can test failover by deleting the first Service Bus namespace (simulating a regional failure or other loss of connectivity), then re-running step 7c. You should see a connection failure message, and then ten (10) messages should be sent to the *second* Azure Service Bus namespace in the list.
+You can test failover by deleting the first Service Bus namespace (simulating a regional failure or other loss of connectivity), then re-running step 8c (or 8d). You should see a connection failure message, and then ten (10) messages should be sent to the *second* Azure Service Bus namespace in the list.
 
 **NOTE** Please do NOT use, or delete, production or critical Azure Service Bus or other resources to try this sample!
 
@@ -131,7 +133,7 @@ You can test failover by deleting the first Service Bus namespace (simulating a 
 
 The sample app consists of two code files: [App.java](./app/src/main/java/com/elazem/azure/servicebus/jmsclient/App.java) and [Client.java](./app/src/main/java/com/elazem/azure/servicebus/jmsclient/Client.java).
 
-App.java contains the main entry point and gets the failover URI (connection string) passed on the command line in step 7c. above. It then instantiates Client and calls its `Send()` method.
+App.java contains the main entry point and gets the failover URI (connection string) passed on the command line in step 8c (or 8d) above. It then instantiates Client and calls its `Send()` method.
 
 Client.java contains the implementation of `Send()`, which sends sample messages to the endpoints in the failover endpoint list. It will attempt each endpoint in order, and if an endpoint fails, it will attempt the next one.
 

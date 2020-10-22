@@ -8,10 +8,15 @@ import org.apache.logging.log4j.LogManager;
 public class App 
 {
     protected static final String ENV_VAR_NAME_SB_CONNECTION_STRING = "SB_CONNECTION_STRING";
-    protected static final String QUEUE_NAME = "q1";
-    protected static final int NUM_OF_MSGS = 10;
 
-    private static final Logger logger = LogManager.getLogger(App.class);
+    protected static final String DEFAULT_QUEUE_NAME = "q1";
+    protected static final int DEFAULT_NUM_OF_MSGS = 10;
+
+    protected static String connectionString;
+    protected static String queueName;
+    protected static int numOfMsgs;
+
+    protected static final Logger logger = LogManager.getLogger(App.class);
 
     public static void main(String[] args) {
         logger.trace("Entering application.");
@@ -19,7 +24,12 @@ public class App
         int status = -1;
 
         try {
-            String connectionString = getConnectionString(args);
+            logger.trace("Get args.");
+            getArgs(args);
+
+            logger.trace(connectionString);
+            logger.trace(queueName);
+            logger.trace(numOfMsgs);
 
             if (isNullOrWhitespace(connectionString))
             {
@@ -28,7 +38,7 @@ public class App
             else
             {
                 Client client = new Client();
-                boolean sendResult = client.send(connectionString, QUEUE_NAME, NUM_OF_MSGS);
+                boolean sendResult = client.send(connectionString, queueName, numOfMsgs);
 
                 if (sendResult)
                     status = 0;
@@ -45,21 +55,28 @@ public class App
         System.exit(status);
     }
 
-    private static String getConnectionString(String[] args)
+    private static void getArgs(String[] args)
     {
-        String connectionString = null;
-
         Options options = new Options();
         options.addOption(new Option("c", true, "Connection string"));
+        options.addOption(new Option("q", true, "Queue name"));
+        options.addOption(new Option("n", true, "Number of messages to send"));
 
         try
         {
-            // First, try to parse connection string from command line
             CommandLineParser clp = new DefaultParser();
             CommandLine cl = clp.parse(options, args);
-            if (cl.getOptionValue("c") != null)
-            {
+
+            if (cl.getOptionValue("c") != null) {
                 connectionString = cl.getOptionValue("c");
+            }
+
+            if (cl.getOptionValue("q") != null) {
+                queueName = cl.getOptionValue("c");
+            }
+
+            if (cl.getOptionValue("n") != null) {
+                numOfMsgs = Integer.parseInt(cl.getOptionValue("n"));
             }
         }
         catch (Exception e)
@@ -83,7 +100,13 @@ public class App
             formatter.printHelp("No connection string found! Run jar with", "", options, "", true);
         }
 
-        return connectionString;
+        if (isNullOrWhitespace(queueName)) {
+            queueName = DEFAULT_QUEUE_NAME;
+        }
+
+        if (numOfMsgs <= 0 || numOfMsgs > 1000) {
+            numOfMsgs = DEFAULT_NUM_OF_MSGS;
+        }
     }
 
     private static boolean isNullOrWhitespace(String checkMe)
